@@ -4,6 +4,17 @@
 const { createClient } = supabase;
 const sb = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
+// 小朋友没有邮箱: 输入用户名, 前端自动拼装成假邮箱
+// e.g. "xiaobao" -> "xiaobao@ktasks.local"
+function normalizeLogin(input) {
+  const s = String(input || "").trim();
+  if (!s) return "";
+  if (s.includes("@")) return s.toLowerCase();
+  // 用户名: 只保留字母数字下划线, 转小写
+  const clean = s.toLowerCase().replace(/[^a-z0-9_]/g, "");
+  return clean + "@ktasks.local";
+}
+
 async function getSession() {
   const { data } = await sb.auth.getSession();
   return data.session;
@@ -61,7 +72,7 @@ async function signUpParent({ email, password, familyName, displayName }) {
 
 async function signUpJoin({ email, password, joinCode, displayName, role }) {
   const { data, error } = await sb.auth.signUp({
-    email,
+    email: normalizeLogin(email),
     password,
     options: {
       data: {
@@ -76,7 +87,10 @@ async function signUpJoin({ email, password, joinCode, displayName, role }) {
 }
 
 async function signIn({ email, password }) {
-  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  const { data, error } = await sb.auth.signInWithPassword({
+    email: normalizeLogin(email),
+    password,
+  });
   if (error) throw error;
   return data;
 }

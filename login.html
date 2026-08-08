@@ -14,8 +14,8 @@
 
       <!-- 登录表单 -->
       <form id="loginForm">
-        <label>邮箱</label>
-        <input id="loginEmail" type="email" required autocomplete="email" placeholder="your@email.com" />
+        <label>邮箱 <small style="color:#999">(或用户名)</small></label>
+        <input id="loginEmail" type="text" required autocomplete="username" placeholder="家长: your@email.com / 小朋友: 用户名" />
         <label>密码</label>
         <input id="loginPassword" type="password" required minlength="6" autocomplete="current-password" />
         <button type="submit">登录</button>
@@ -51,8 +51,8 @@
           <option value="parent">家长 (可以管理任务)</option>
           <option value="kid">小朋友 (只能打卡)</option>
         </select>
-        <label>邮箱</label>
-        <input id="joinEmail" type="email" required autocomplete="email" />
+        <label>邮箱 <small style="color:#999">(小朋友没邮箱可以只填用户名, 如 xiaobao)</small></label>
+        <input id="joinEmail" type="text" required autocomplete="username" placeholder="家长: your@email.com / 小朋友: 用户名" />
         <label>密码 (至少 6 位)</label>
         <input id="joinPassword" type="password" required minlength="6" autocomplete="new-password" />
         <button type="submit">加入家庭</button>
