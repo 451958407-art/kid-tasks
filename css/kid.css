@@ -41,32 +41,45 @@ main {
 
 h2 { font-size: 18px; margin: 20px 0 12px 4px; color: #444; }
 
-.task-list { display: flex; flex-direction: column; gap: 10px; }
+.task-list { display: flex; flex-direction: column; gap: 8px; }
 
 .task-card {
-  background: #fff; border-radius: 14px; padding: 14px;
-  display: flex; align-items: center; gap: 14px;
+  background: #fff; border-radius: 14px; padding: 10px 12px;
+  display: flex; align-items: center; gap: 10px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   transition: opacity 0.2s;
+  position: relative;
 }
 .task-card.done { opacity: 0.5; }
-.task-emoji { font-size: 32px; flex-shrink: 0; }
-.task-info { flex: 1; min-width: 0; }
-.task-name { font-size: 15px; font-weight: 600; color: #333; margin-bottom: 4px; }
-.task-meta {
-  display: flex; gap: 10px; flex-wrap: wrap;
-  font-size: 12px; color: #999;
+.task-emoji {
+  font-size: 32px; flex-shrink: 0;
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, #fff5f7, #fff2e6);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
 }
-.task-meta .points { color: #ff8a4a; font-weight: 600; }
-.task-meta .progress { letter-spacing: 1px; }
-.task-meta .timer { color: #5b9bff; }
+.task-info { flex: 1; min-width: 0; }
+.task-name { font-size: 15px; font-weight: 600; color: #333; margin-bottom: 3px; }
+.task-meta {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  font-size: 11px; color: #999;
+}
+.task-meta .points {
+  color: #ff8a4a; font-weight: 700;
+  background: #fff5f0; padding: 2px 8px; border-radius: 10px;
+}
+.task-meta .progress { letter-spacing: 1px; font-size: 13px; }
+.task-meta .timer {
+  color: #5b9bff; background: #eef4ff;
+  padding: 2px 8px; border-radius: 10px;
+}
 
 .btn-checkin {
-  padding: 10px 22px; border: none; border-radius: 22px;
+  padding: 8px 18px; border: none; border-radius: 20px;
   background: linear-gradient(135deg, #ff6b81 0%, #ff8a4a 100%);
-  color: #fff; font-size: 15px; font-weight: 700; cursor: pointer;
+  color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(255, 107, 129, 0.35);
+  box-shadow: 0 3px 10px rgba(255, 107, 129, 0.35);
   transition: transform 0.1s, box-shadow 0.2s;
 }
 .btn-checkin:hover { box-shadow: 0 6px 16px rgba(255, 107, 129, 0.45); }
@@ -136,3 +149,419 @@ h2 { font-size: 18px; margin: 20px 0 12px 4px; color: #444; }
 .member-role.parent { background: #ffe0e6; color: #ff6b81; }
 .member-role.kid { background: #e6f4ff; color: #5b9bff; }
 .hint { margin-top: 10px; font-size: 12px; color: #aaa; line-height: 1.5; }
+
+/* ===== 顶部积分卡片 强调可用积分 ===== */
+.stat.highlight { background: linear-gradient(135deg, #ff8a4a 0%, #ff6b81 100%); }
+.stat.highlight .stat-label { color: rgba(255,255,255,0.85); }
+.stat.highlight .stat-value { color: #fff; }
+.sub-stats {
+  display: flex; justify-content: space-around;
+  font-size: 12px; color: #888; margin: -8px 0 16px;
+  background: #fff; border-radius: 12px; padding: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+.sub-stats b { color: #ff8a4a; }
+
+/* ===== Tab 切换 ===== */
+.tabs {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+  background: #fff; padding: 6px; border-radius: 12px;
+  margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.tab-btn {
+  border: none; background: transparent; padding: 10px 8px;
+  border-radius: 8px; font-size: 13px; font-weight: 600;
+  color: #888; cursor: pointer; transition: all 0.2s;
+}
+.tab-btn.active {
+  background: linear-gradient(135deg, #ff6b81 0%, #ff8a4a 100%);
+  color: #fff; box-shadow: 0 2px 8px rgba(255,107,129,0.3);
+}
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ===== 已完成: 淡绿背景 + emoji 上的 ✓ 徽章 ===== */
+.task-card.done {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  opacity: 1;
+}
+.task-card.done .task-emoji {
+  opacity: 0.7;
+  position: relative;
+}
+.task-check {
+  position: absolute;
+  bottom: -2px; right: -4px;
+  width: 20px; height: 20px;
+  background: #22c55e; color: #fff;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(34,197,94,0.4);
+}
+.task-card.done .task-name {
+  color: #666;
+}
+
+.task-done-area {
+  display: flex; flex-direction: column;
+  align-items: flex-end; gap: 4px;
+  flex-shrink: 0;
+}
+.task-action-col {
+  display: flex; flex-direction: column;
+  align-items: flex-end; gap: 4px;
+  flex-shrink: 0;
+}
+.done-badge {
+  color: #22c55e; font-weight: 700; font-size: 14px;
+  padding: 4px 12px; background: #dcfce7;
+  border-radius: 14px; white-space: nowrap;
+}
+.undo-link {
+  background: none; border: none; padding: 2px 4px;
+  color: #94a3b8; font-size: 11px; cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.15s;
+}
+.undo-link:hover { color: #ef4444; text-decoration: underline; }
+
+/* ===== 互斥禁用: 提示已选另一档 ===== */
+.task-card.blocked { opacity: 0.55; }
+.task-card.blocked .btn-checkin:disabled {
+  background: #f5f5f5; color: #999;
+  font-size: 12px; padding: 6px 10px;
+}
+.blocked-hint {
+  color: #d97706; font-size: 11px; margin-top: 4px;
+}
+
+/* ===== 奖励区: 家长/小孩视图 ===== */
+.rewards-notice {
+  background: linear-gradient(135deg, #fff5f7 0%, #fff8f0 100%);
+  border: 1px dashed #ffb6c1; border-radius: 12px;
+  padding: 10px 14px; font-size: 13px; color: #a06;
+  margin-bottom: 12px; text-align: center;
+}
+.rewards-notice b { color: #ff6b81; }
+
+.reward-card.kid-view .btn-redeem {
+  background: #f0f0f0 !important; color: #999 !important;
+  box-shadow: none !important; cursor: not-allowed;
+}
+
+/* 积分不足: 整卡变暗 + 按钮变灰 */
+.reward-card.not-enough {
+  opacity: 0.6;
+}
+.reward-card.not-enough .reward-emoji {
+  filter: grayscale(0.4);
+}
+.btn-redeem.disabled,
+.btn-redeem:disabled {
+  background: #d1d5db !important;
+  color: #6b7280 !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
+}
+
+/* 今日已兑提示 */
+.reward-today {
+  font-size: 11px; color: #ff8a4a;
+  background: #fff5f0; padding: 3px 8px;
+  border-radius: 10px; margin-top: 6px;
+  display: inline-block; font-weight: 600;
+}
+
+/* 最近兑换里的"取消兑换"按钮更醒目 */
+.recent-redemptions .mini-btn.danger {
+  background: #fef2f2; color: #ef4444;
+  border-color: #fecaca; font-weight: 600;
+  padding: 4px 10px;
+}
+.recent-redemptions .mini-btn.danger:hover {
+  background: #ef4444; color: #fff; border-color: #ef4444;
+}
+
+/* ===== 最近兑换列表 ===== */
+.section-title {
+  font-size: 14px; color: #666; margin: 20px 4px 8px;
+  font-weight: 600;
+}
+.recent-redemptions .hist-item {
+  background: #fff; border-radius: 10px; padding: 10px 14px;
+  margin-bottom: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  font-size: 13px;
+}
+.recent-redemptions .hist-item span:first-child {
+  color: #444; font-weight: 500;
+}
+
+/* ===== 奖励列表: 2 列网格 竖排卡片 ===== */
+.reward-list {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+}
+.reward-card {
+  background: #fff; border-radius: 16px; padding: 16px 12px;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 2px solid transparent;
+  transition: transform 0.15s, border-color 0.2s;
+  position: relative;
+}
+.reward-card:hover { border-color: #ffd0c0; transform: translateY(-2px); }
+.reward-emoji {
+  font-size: 44px; line-height: 1;
+  width: 68px; height: 68px;
+  background: linear-gradient(135deg, #fff5f7, #fff2e6);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 4px;
+}
+.reward-info { width: 100%; }
+.reward-name {
+  font-size: 14px; font-weight: 600; color: #333;
+  margin-bottom: 4px; line-height: 1.3;
+}
+.reward-name .tag {
+  display: block; margin: 4px auto 0; padding: 1px 8px;
+  background: #fff5f7; color: #ff6b81; font-size: 10px;
+  border-radius: 6px; font-weight: 500; width: fit-content;
+}
+.reward-cost {
+  font-size: 15px; color: #ff8a4a; font-weight: 700;
+  background: #fff5f0; padding: 4px 10px;
+  border-radius: 12px; display: inline-block;
+}
+.btn-redeem {
+  padding: 8px 24px; border: none; border-radius: 20px;
+  background: linear-gradient(135deg, #ffb066 0%, #ff8a4a 100%);
+  color: #fff; font-weight: 700; font-size: 14px; cursor: pointer;
+  box-shadow: 0 3px 10px rgba(255,138,74,0.35);
+  margin-top: 4px; width: 100%;
+}
+.btn-redeem:active { transform: scale(0.95); }
+
+/* ===== 记录 ===== */
+.history-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.mini-tab-btn {
+  flex: 1; padding: 8px; border: 1px solid #eee;
+  background: #fff; color: #666; border-radius: 8px;
+  font-size: 13px; cursor: pointer;
+}
+.mini-tab-btn.active {
+  background: #fff5f7; color: #ff6b81; border-color: #ffd0c0; font-weight: 600;
+}
+.hist-day {
+  background: #fff; border-radius: 12px; padding: 10px 14px;
+  margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.hist-day-header {
+  display: flex; justify-content: space-between; align-items: center;
+  font-weight: 600; color: #444; font-size: 13px;
+  padding-bottom: 6px; margin-bottom: 6px; border-bottom: 1px dashed #eee;
+}
+.hist-sum { color: #ff8a4a; }
+.hist-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0; font-size: 14px; color: #555;
+}
+.hist-pts { color: #ff8a4a; font-weight: 600; }
+.hist-pts.danger { color: #e74c3c; }
+#redemptionsHistory .hist-item {
+  background: #fff; border-radius: 10px; padding: 10px 14px;
+  margin-bottom: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* ===== 兑换弹窗 ===== */
+.modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200; padding: 20px;
+}
+.modal-card {
+  background: #fff; border-radius: 16px; padding: 24px;
+  max-width: 360px; width: 100%; text-align: center;
+  animation: modalIn 0.2s ease;
+}
+@keyframes modalIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.modal-emoji { font-size: 56px; margin-bottom: 10px; }
+.modal-card h3 { margin-bottom: 8px; color: #333; }
+.modal-desc { font-size: 13px; color: #888; margin-bottom: 16px; }
+
+/* 金额输入框 */
+.amount-input-row {
+  display: flex; align-items: center;
+  background: #fff8f0; border: 2px solid #ffd0b0;
+  border-radius: 12px; padding: 4px 12px 4px 4px;
+  margin-top: 8px;
+}
+.amount-input-row:focus-within { border-color: #ff8a4a; }
+.amount-input-row input {
+  flex: 1; border: none; background: transparent;
+  padding: 12px; font-size: 22px; font-weight: 700;
+  color: #ff6b3a; text-align: center; outline: none; width: 100%;
+}
+.amount-unit {
+  font-size: 16px; color: #ff8a4a; font-weight: 600;
+  padding: 0 4px; flex-shrink: 0;
+}
+.amount-input-row input::-webkit-outer-spin-button,
+.amount-input-row input::-webkit-inner-spin-button {
+  -webkit-appearance: none; margin: 0;
+}
+
+.quick-picks {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-top: 10px;
+}
+.qp-btn {
+  padding: 6px 12px; border-radius: 16px;
+  border: 1px solid #ffd0b0; background: #fff;
+  color: #ff8a4a; font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: all 0.15s;
+}
+.qp-btn:hover { background: #fff5f0; }
+.qp-btn.active {
+  background: linear-gradient(135deg, #ff6b81 0%, #ff8a4a 100%);
+  color: #fff; border-color: transparent;
+}
+.qp-btn.max { border-style: dashed; }
+.qp-btn.max.active { border-style: solid; }
+
+.modal-total {
+  background: #fff5f7; border-radius: 12px; padding: 12px;
+  margin: 16px 0; font-size: 15px; color: #555; text-align: center;
+}
+.modal-total b { color: #ff6b81; font-size: 22px; font-weight: 700; }
+.modal-actions { display: flex; gap: 10px; }
+.btn-secondary, .btn-primary {
+  flex: 1; padding: 12px; border: none; border-radius: 22px;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.btn-secondary { background: #f3f3f3; color: #666; }
+.btn-primary {
+  background: linear-gradient(135deg, #ff6b81 0%, #ff8a4a 100%);
+  color: #fff; box-shadow: 0 4px 12px rgba(255,107,129,0.35);
+}
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary:disabled {
+  background: #e0e0e0; color: #999; cursor: not-allowed;
+  box-shadow: none; transform: none;
+}
+
+/* ===== 日历 ===== */
+.cal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.cal-nav {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid #eee; background: #fff; color: #666;
+  font-size: 20px; cursor: pointer; line-height: 1;
+}
+.cal-nav:hover { background: #fff5f7; color: #ff6b81; border-color: #ffd0c0; }
+.cal-title { font-size: 16px; font-weight: 700; color: #333; }
+.cal-month-sum {
+  display: flex; justify-content: space-around;
+  font-size: 12px; color: #888; margin-bottom: 12px;
+  background: #fff; border-radius: 10px; padding: 8px;
+}
+.cal-month-sum b { color: #ff8a4a; font-size: 14px; }
+.cal-weekdays {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  text-align: center; font-size: 12px; color: #999;
+  padding: 8px 4px 4px; background: #fff; border-radius: 10px 10px 0 0;
+}
+.cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 3px; background: #fff; padding: 4px 4px 8px;
+  border-radius: 0 0 10px 10px; margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.cal-cell {
+  aspect-ratio: 1 / 1; min-height: 42px; max-height: 56px;
+  border-radius: 8px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 13px; color: #444;
+  background: #fafafa; cursor: pointer; position: relative;
+  transition: all 0.15s;
+}
+.cal-cell.empty {
+  background: transparent; cursor: default; visibility: hidden;
+}
+.cal-cell.has-data { background: #fff5f7; color: #ff6b81; }
+.cal-cell.today {
+  border: 2px solid #ff8a4a; font-weight: 700;
+  background: #fff8f0;
+}
+.cal-cell.today.has-data { background: #ffe8d9; }
+.cal-cell.future {
+  color: #ccc; cursor: not-allowed; background: #fafafa;
+}
+.cal-cell:not(.empty):not(.future):hover { background: #ffe0e6; }
+.cal-cell.selected {
+  background: linear-gradient(135deg, #ff6b81 0%, #ff8a4a 100%) !important;
+  color: #fff !important; border: 2px solid #ff5a70;
+}
+.cal-cell.selected .cal-pts { color: #fff; }
+.cal-num { font-size: 14px; line-height: 1.1; font-weight: 500; }
+.cal-pts { font-size: 10px; font-weight: 600; color: #ff8a4a; line-height: 1; margin-top: 2px; }
+
+.cal-day-detail {
+  background: #fff; border-radius: 12px; padding: 12px 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.cal-day-header {
+  display: flex; justify-content: space-between; align-items: center;
+  font-weight: 600; color: #444; font-size: 14px;
+  padding-bottom: 8px; margin-bottom: 6px; border-bottom: 1px dashed #eee;
+}
+#calDayTitle { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 8px; }
+.mini-btn.primary {
+  background: linear-gradient(135deg, #ff6b81 0%, #ff8a4a 100%);
+  color: #fff; border: none; font-weight: 600;
+  padding: 6px 14px;
+}
+.cal-day-sum {
+  text-align: center; font-size: 13px; color: #888;
+  padding: 6px 0 8px;
+}
+
+/* ===== 任务页顶部日期切换 ===== */
+.date-nav {
+  display: flex; align-items: center; gap: 8px;
+  background: #fff; border-radius: 14px; padding: 8px;
+  margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.date-nav-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid #eee; background: #fff; color: #666;
+  font-size: 20px; cursor: pointer; line-height: 1;
+  flex-shrink: 0;
+}
+.date-nav-btn:hover:not(:disabled) {
+  background: #fff5f7; color: #ff6b81; border-color: #ffd0c0;
+}
+.date-nav-btn:disabled { cursor: not-allowed; }
+.date-nav-center { flex: 1; text-align: center; }
+.date-label {
+  font-size: 15px; font-weight: 700; color: #333;
+}
+.date-sub { font-size: 11px; color: #999; margin-top: 2px; }
+.back-today {
+  padding: 6px 12px; border-radius: 16px;
+  border: none;
+  background: linear-gradient(135deg, #ff6b81 0%, #ff8a4a 100%);
+  color: #fff; font-size: 12px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 2px 6px rgba(255,107,129,0.3);
+  flex-shrink: 0;
+}
+.btn-checkin.past {
+  background: linear-gradient(135deg, #ffab5c 0%, #ff8a4a 100%);
+}
+
+/* 3 项 sub-stats 适配 */
+.sub-stats { flex-wrap: wrap; gap: 4px; }

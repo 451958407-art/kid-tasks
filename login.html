@@ -24,6 +24,9 @@
           <span style="margin:0 6px;color:#ccc">|</span>
           <a href="#" id="toJoin">加入已有家庭</a>
         </p>
+        <p class="switch" style="margin-top:6px">
+          <a href="#" id="toForgot" style="color:#888">忘记密码?</a>
+        </p>
       </form>
 
       <!-- 注册新家庭表单 -->
@@ -59,6 +62,15 @@
         <p class="switch"><a href="#" class="toLogin">已有账号? 直接登录</a></p>
       </form>
 
+      <!-- 忘记密码表单 -->
+      <form id="forgotForm" style="display:none">
+        <label>输入你的邮箱, 收到重置链接后可设新密码</label>
+        <input id="forgotEmail" type="email" required autocomplete="email" placeholder="your@email.com" />
+        <p class="hint" style="font-size:12px;color:#999;margin:6px 0">仅限家长(用邮箱注册的)。小朋友账号请让家长在"家庭面板"里帮忙重置。</p>
+        <button type="submit">发送重置邮件</button>
+        <p class="switch"><a href="#" class="toLogin">回到登录</a></p>
+      </form>
+
       <p id="msg" class="msg"></p>
     </div>
   </div>
@@ -77,7 +89,7 @@
     Auth.getSession().then((s) => { if (s) location.href = "index.html"; });
 
     function showForm(id, title) {
-      ["loginForm", "registerForm", "joinForm"].forEach((f) => {
+      ["loginForm", "registerForm", "joinForm", "forgotForm"].forEach((f) => {
         $(f).style.display = f === id ? "block" : "none";
       });
       $("title").textContent = title;
@@ -86,6 +98,7 @@
 
     $("toRegister").onclick = (e) => { e.preventDefault(); showForm("registerForm", "注册新家庭"); };
     $("toJoin").onclick = (e) => { e.preventDefault(); showForm("joinForm", "加入已有家庭"); };
+    $("toForgot").onclick = (e) => { e.preventDefault(); showForm("forgotForm", "忘记密码"); };
     document.querySelectorAll(".toLogin").forEach((a) => {
       a.onclick = (e) => { e.preventDefault(); showForm("loginForm", "登录"); };
     });
@@ -145,6 +158,18 @@
         }
       } catch (err) {
         msg(err.message || "加入失败, 请检查邀请码", true);
+      }
+    };
+
+    // 忘记密码
+    $("forgotForm").onsubmit = async (e) => {
+      e.preventDefault();
+      msg("发送中...", false);
+      try {
+        await Auth.sendPasswordResetEmail($("forgotEmail").value.trim());
+        msg("已发送重置邮件, 请查收邮箱(含垃圾邮件夹)", false);
+      } catch (err) {
+        msg(err.message || "发送失败", true);
       }
     };
   </script>

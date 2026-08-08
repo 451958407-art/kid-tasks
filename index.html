@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>今天的任务</title>
-  <link rel="stylesheet" href="css/kid.css" />
+  <link rel="stylesheet" href="css/kid.css?v=7" />
 </head>
 <body>
   <header>
@@ -16,18 +16,96 @@
   </header>
 
   <main>
+    <!-- 顶部积分卡片 -->
     <div class="stats">
       <div class="stat">
-        <div class="stat-label">今日积分</div>
+        <div class="stat-label">今日打卡</div>
         <div class="stat-value" id="todayPoints">0 ⭐</div>
       </div>
-      <div class="stat">
-        <div class="stat-label">累计积分</div>
-        <div class="stat-value" id="totalPoints">0 ⭐</div>
+      <div class="stat highlight">
+        <div class="stat-label">可用积分</div>
+        <div class="stat-value" id="availablePoints">0 ⭐</div>
       </div>
     </div>
+    <div class="sub-stats">
+      <span>本月获得: <b id="monthPoints">0</b> ⭐</span>
+      <span>累计获得: <b id="totalPoints">0</b> ⭐</span>
+      <span>已兑换: <b id="usedPoints">0</b> ⭐</span>
+    </div>
 
-    <div id="familyPanel" class="family-panel" style="display:none">
+    <!-- Tab 切换 -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="tasks">📋 今日任务</button>
+      <button class="tab-btn" data-tab="rewards">🎁 兑换奖励</button>
+      <button class="tab-btn" data-tab="history">📅 记录</button>
+    </div>
+
+    <!-- Tab 1: 任务 -->
+    <section id="tab-tasks" class="tab-panel active">
+      <div class="date-nav">
+        <button id="prevDay" class="date-nav-btn" title="前一天">‹</button>
+        <div class="date-nav-center">
+          <div id="currentDateLabel" class="date-label">今天</div>
+          <div id="currentDateSub" class="date-sub">-</div>
+        </div>
+        <button id="nextDay" class="date-nav-btn" title="后一天">›</button>
+        <button id="backToday" class="back-today" style="display:none">回今天</button>
+      </div>
+      <div id="taskList" class="task-list">
+        <div class="loading">正在加载任务...</div>
+      </div>
+    </section>
+
+    <!-- Tab 2: 奖励 -->
+    <section id="tab-rewards" class="tab-panel">
+      <div id="rewardsNotice" class="rewards-notice" style="display:none">
+        🔒 兑换奖励需要 <b>家长</b> 操作哦, 让爸爸妈妈来帮你换吧
+      </div>
+      <div id="rewardList" class="reward-list">
+        <div class="loading">正在加载奖励...</div>
+      </div>
+
+      <h3 class="section-title">最近兑换</h3>
+      <div id="recentRedemptions" class="recent-redemptions"></div>
+    </section>
+
+    <!-- Tab 3: 记录 -->
+    <section id="tab-history" class="tab-panel">
+      <div class="history-tabs">
+        <button class="mini-tab-btn active" data-htab="calendar">📅 日历</button>
+        <button class="mini-tab-btn" data-htab="redemptions">🎁 兑换记录</button>
+      </div>
+
+      <div id="calendarView" class="history-list">
+        <div class="cal-header">
+          <button id="prevMonth" class="cal-nav">‹</button>
+          <span id="calTitle" class="cal-title">-</span>
+          <button id="nextMonth" class="cal-nav">›</button>
+        </div>
+        <div class="cal-month-sum">
+          <span>本月获得: <b id="calMonthSum">0</b> ⭐</span>
+          <span>打卡: <b id="calMonthDays">0</b> 天</span>
+        </div>
+        <div class="cal-weekdays">
+          <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+        </div>
+        <div id="calGrid" class="cal-grid"></div>
+        <div id="calDayDetail" class="cal-day-detail" style="display:none">
+          <div class="cal-day-header">
+            <span id="calDayTitle">-</span>
+            <button id="calCloseDay" class="link-btn">收起</button>
+          </div>
+          <div id="calDayList"></div>
+        </div>
+      </div>
+
+      <div id="redemptionsHistory" class="history-list" style="display:none">
+        <div class="loading">加载中...</div>
+      </div>
+    </section>
+
+    <!-- 家庭面板 -->
+    <div id="familyPanel" class="family-panel" style="display:none;margin-top:20px">
       <div class="family-header">
         <span class="family-title">👨‍👩‍👧 <span id="familyName">我的家庭</span></span>
         <button id="toggleFamily" class="link-btn">展开</button>
@@ -45,17 +123,50 @@
       </div>
     </div>
 
-    <h2>📋 今天的任务</h2>
-    <div id="taskList" class="task-list">
-      <div class="loading">正在加载任务...</div>
+    <div class="family-panel">
+      <div class="family-header">
+        <span class="family-title">🔑 账号</span>
+        <button id="toggleAccount" class="link-btn">展开</button>
+      </div>
+      <div id="accountBody" class="family-body" style="display:none">
+        <div class="mini-label">修改我的密码</div>
+        <input id="myNewPassword" type="password" minlength="6" placeholder="新密码 (至少 6 位)" style="width:100%;padding:8px 10px;border:1px solid #eee;border-radius:8px;margin-top:6px;font-size:14px" />
+        <button id="myPwdBtn" class="mini-btn" style="margin-top:8px">保存新密码</button>
+        <p class="hint">下次登录用新密码。用户名/邮箱不变。</p>
+      </div>
     </div>
   </main>
 
   <div id="toast" class="toast"></div>
 
+  <!-- 兑换弹窗 -->
+  <div id="redeemModal" class="modal" style="display:none">
+    <div class="modal-card">
+      <div class="modal-emoji" id="rmEmoji">🎁</div>
+      <h3 id="rmName">奖励名</h3>
+      <p id="rmDesc" class="modal-desc"></p>
+      <div id="rmAmountRow" style="display:none">
+        <label class="mini-label" id="rmAmountLabel">我要兑换</label>
+        <div class="amount-input-row">
+          <input id="rmAmount" type="number" min="1" step="1" value="1" />
+          <span class="amount-unit" id="rmAmountUnit">元</span>
+        </div>
+        <div id="rmQuickPicks" class="quick-picks"></div>
+        <p class="hint" id="rmAmountHint"></p>
+      </div>
+      <div class="modal-total">
+        共消耗: <b id="rmTotal">0</b> ⭐
+      </div>
+      <div class="modal-actions">
+        <button id="rmCancel" class="btn-secondary">取消</button>
+        <button id="rmConfirm" class="btn-primary">兑换</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
   <script src="js/auth.js"></script>
-  <script src="js/kid.js"></script>
+  <script src="js/kid.js?v=7"></script>
 </body>
 </html>

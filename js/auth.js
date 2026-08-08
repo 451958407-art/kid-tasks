@@ -125,9 +125,36 @@ async function rotateJoinCode() {
   return data;
 }
 
+async function changePassword(newPassword) {
+  const { data, error } = await sb.auth.updateUser({ password: newPassword });
+  if (error) throw error;
+  return data;
+}
+
+async function sendPasswordResetEmail(email) {
+  const normalized = normalizeLogin(email);
+  if (normalized.endsWith("@ktasks.local")) {
+    throw new Error("小朋友账号(用户名注册)不能邮箱找回, 请让家长在家庭面板重置");
+  }
+  const redirectTo = `${location.origin}${location.pathname.replace(/[^/]*$/, "")}reset.html`;
+  const { data, error } = await sb.auth.resetPasswordForEmail(normalized, { redirectTo });
+  if (error) throw error;
+  return data;
+}
+
+async function adminResetMemberPassword(targetUserId, newPassword) {
+  const { error } = await sb.rpc("admin_reset_member_password", {
+    target_user_id: targetUserId,
+    new_password: newPassword,
+  });
+  if (error) throw error;
+}
+
 window.sb = sb;
 window.Auth = {
   getSession, getProfile, requireAuth, signOut,
   signUpParent, signUpJoin, signIn,
   getFamilyInfo, getFamilyMembers, rotateJoinCode,
+  changePassword, sendPasswordResetEmail, adminResetMemberPassword,
+  normalizeLogin,
 };

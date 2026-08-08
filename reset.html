@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>重置密码</title>
+  <link rel="stylesheet" href="css/login.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="logo">🔑</div>
+      <h1>设置新密码</h1>
+      <form id="resetForm">
+        <label>新密码 (至少 6 位)</label>
+        <input id="newPassword" type="password" required minlength="6" autocomplete="new-password" />
+        <label>确认新密码</label>
+        <input id="confirmPassword" type="password" required minlength="6" autocomplete="new-password" />
+        <button type="submit">保存新密码</button>
+      </form>
+      <p id="msg" class="msg"></p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const msg = (text, isError) => {
+      const m = $("msg");
+      m.textContent = text;
+      m.className = "msg " + (isError ? "err" : "ok");
+    };
+
+    $("resetForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const p1 = $("newPassword").value;
+      const p2 = $("confirmPassword").value;
+      if (p1 !== p2) { msg("两次密码不一致", true); return; }
+      msg("保存中...", false);
+      try {
+        await Auth.changePassword(p1);
+        msg("密码已重置, 3 秒后跳转到登录页...", false);
+        setTimeout(() => location.href = "login.html", 3000);
+      } catch (err) {
+        msg(err.message || "重置失败, 链接可能已过期", true);
+      }
+    };
+  </script>
+</body>
+</html>
