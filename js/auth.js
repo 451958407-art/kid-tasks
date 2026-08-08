@@ -59,11 +59,61 @@ async function signUpParent({ email, password, familyName, displayName }) {
   return data;
 }
 
+async function signUpJoin({ email, password, joinCode, displayName, role }) {
+  const { data, error } = await sb.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        join_code: joinCode,
+        display_name: displayName || "成员",
+        role: role || "kid",
+      },
+    },
+  });
+  if (error) throw error;
+  return data;
+}
+
 async function signIn({ email, password }) {
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
   if (error) throw error;
   return data;
 }
 
+async function getFamilyInfo() {
+  const { data, error } = await sb
+    .from("families")
+    .select("id, name, join_code")
+    .single();
+  if (error) {
+    console.warn("getFamilyInfo error", error);
+    return null;
+  }
+  return data;
+}
+
+async function getFamilyMembers() {
+  const { data, error } = await sb
+    .from("profiles")
+    .select("user_id, display_name, role, created_at")
+    .order("created_at");
+  if (error) {
+    console.warn("getFamilyMembers error", error);
+    return [];
+  }
+  return data || [];
+}
+
+async function rotateJoinCode() {
+  const { data, error } = await sb.rpc("rotate_join_code");
+  if (error) throw error;
+  return data;
+}
+
 window.sb = sb;
-window.Auth = { getSession, getProfile, requireAuth, signOut, signUpParent, signIn };
+window.Auth = {
+  getSession, getProfile, requireAuth, signOut,
+  signUpParent, signUpJoin, signIn,
+  getFamilyInfo, getFamilyMembers, rotateJoinCode,
+};

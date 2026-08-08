@@ -122,6 +122,65 @@ async function main() {
   $("roleTag").classList.add(auth.profile.role);
   $("logoutBtn").onclick = () => Auth.signOut();
   await loadTasks();
+  initFamilyPanel();
+}
+
+async function initFamilyPanel() {
+  const panel = $("familyPanel");
+  panel.style.display = "block";
+  const info = await Auth.getFamilyInfo();
+  if (info) {
+    $("familyName").textContent = info.name || "我的家庭";
+    $("joinCode").textContent = info.join_code || "------";
+  }
+
+  const isParent = state.profile.role === "parent";
+  if (isParent) $("rotateCode").style.display = "inline-block";
+
+  $("toggleFamily").onclick = async () => {
+    const body = $("familyBody");
+    const showing = body.style.display !== "none";
+    body.style.display = showing ? "none" : "block";
+    $("toggleFamily").textContent = showing ? "展开" : "收起";
+    if (!showing) await renderMembers();
+  };
+
+  $("copyCode").onclick = async () => {
+    const code = $("joinCode").textContent.trim();
+    try {
+      await navigator.clipboard.writeText(code);
+      toast("邀请码已复制", false);
+    } catch {
+      toast(`请手动复制: ${code}`, true);
+    }
+  };
+
+  $("rotateCode").onclick = async () => {
+    if (!confirm("刷新后旧邀请码立即失效, 已加入的成员不受影响。确认继续?")) return;
+    try {
+      const newCode = await Auth.rotateJoinCode();
+      $("joinCode").textContent = newCode;
+      toast("邀请码已刷新", false);
+    } catch (err) {
+      toast(err.message || "刷新失败", true);
+    }
+  };
+}
+
+async function renderMembers() {
+  const list = $("memberList");
+  list.innerHTML = "<li class='loading'>加载中...</li>";
+  const members = await Auth.getFamilyMembers();
+  if (!members.length) {
+    list.innerHTML = "<li class='empty'>暂无成员</li>";
+    return;
+  }
+  list.innerHTML = members.map((m) => {
+    const roleTxt = m.role === "parent" ? "家长" : "小朋友";
+    const roleCls = m.role === "parent" ? "parent" : "kid";
+    const isMe = m.user_id === state.session.user.id ? " (我)" : "";
+    return `<li><span class="member-name">${escapeHtml(m.display_name || "无昵称")}${isMe}</span><span class="member-role ${roleCls}">${roleTxt}</span></li>`;
+  }).join("");
 }
 
 main();

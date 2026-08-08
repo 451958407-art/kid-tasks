@@ -27,6 +27,24 @@
       </div>
     </div>
 
+    <div id="familyPanel" class="family-panel" style="display:none">
+      <div class="family-header">
+        <span class="family-title">👨‍👩‍👧 <span id="familyName">我的家庭</span></span>
+        <button id="toggleFamily" class="link-btn">展开</button>
+      </div>
+      <div id="familyBody" class="family-body" style="display:none">
+        <div class="join-code-row">
+          <span class="mini-label">邀请码</span>
+          <span id="joinCode" class="join-code">------</span>
+          <button id="copyCode" class="mini-btn">复制</button>
+          <button id="rotateCode" class="mini-btn danger" style="display:none">刷新</button>
+        </div>
+        <div class="mini-label" style="margin-top:8px">成员</div>
+        <ul id="memberList" class="member-list"></ul>
+        <p class="hint">让其他家人打开这个网址, 选"加入已有家庭"输入邀请码即可</p>
+      </div>
+    </div>
+
     <h2>📋 今天的任务</h2>
     <div id="taskList" class="task-list">
       <div class="loading">正在加载任务...</div>

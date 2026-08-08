@@ -89,3 +89,50 @@ h2 { font-size: 18px; margin: 20px 0 12px 4px; color: #444; }
 .toast.show { opacity: 1; bottom: 60px; }
 .toast.ok { background: #4caf50; }
 .toast.err { background: #e74c3c; }
+
+/* ===== 家庭面板 ===== */
+.family-panel {
+  background: #fff; border-radius: 14px; padding: 12px 14px;
+  margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.family-header {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.family-title { font-size: 14px; font-weight: 600; color: #444; }
+.link-btn {
+  background: none; border: none; color: #ff6b81; font-size: 13px;
+  cursor: pointer; padding: 4px 8px;
+}
+.family-body { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #eee; }
+.mini-label { font-size: 12px; color: #999; }
+.join-code-row {
+  display: flex; align-items: center; gap: 8px; margin-top: 4px;
+  flex-wrap: wrap;
+}
+.join-code {
+  font-family: "SF Mono", Menlo, monospace; font-size: 20px;
+  font-weight: 700; color: #ff6b81; letter-spacing: 4px;
+  background: #fff5f7; padding: 6px 12px; border-radius: 8px;
+}
+.mini-btn {
+  padding: 6px 12px; border: 1px solid #ddd; background: #fff;
+  border-radius: 8px; font-size: 12px; cursor: pointer; color: #666;
+}
+.mini-btn:hover { background: #f8f8f8; }
+.mini-btn.danger { color: #e74c3c; border-color: #f5c6cb; }
+.member-list {
+  list-style: none; padding: 0; margin: 8px 0 0 0;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.member-list li {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #fafafa; border-radius: 8px; padding: 8px 12px;
+  font-size: 13px;
+}
+.member-name { color: #333; font-weight: 500; }
+.member-role {
+  font-size: 11px; padding: 2px 8px; border-radius: 10px;
+}
+.member-role.parent { background: #ffe0e6; color: #ff6b81; }
+.member-role.kid { background: #e6f4ff; color: #5b9bff; }
+.hint { margin-top: 10px; font-size: 12px; color: #aaa; line-height: 1.5; }

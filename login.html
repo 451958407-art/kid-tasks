@@ -19,10 +19,14 @@
         <label>密码</label>
         <input id="loginPassword" type="password" required minlength="6" autocomplete="current-password" />
         <button type="submit">登录</button>
-        <p class="switch">还没有家庭？<a href="#" id="toRegister">注册新家庭</a></p>
+        <p class="switch">
+          <a href="#" id="toRegister">注册新家庭</a>
+          <span style="margin:0 6px;color:#ccc">|</span>
+          <a href="#" id="toJoin">加入已有家庭</a>
+        </p>
       </form>
 
-      <!-- 注册表单 -->
+      <!-- 注册新家庭表单 -->
       <form id="registerForm" style="display:none">
         <label>家庭名称</label>
         <input id="regFamilyName" type="text" required maxlength="30" placeholder="例如: 快乐一家" />
@@ -33,7 +37,26 @@
         <label>密码 (至少 6 位)</label>
         <input id="regPassword" type="password" required minlength="6" autocomplete="new-password" />
         <button type="submit">创建家庭</button>
-        <p class="switch">已有账号？<a href="#" id="toLogin">直接登录</a></p>
+        <p class="switch"><a href="#" class="toLogin">已有账号? 直接登录</a></p>
+      </form>
+
+      <!-- 加入已有家庭表单 -->
+      <form id="joinForm" style="display:none">
+        <label>邀请码 (6 位, 找家长要)</label>
+        <input id="joinCode" type="text" required maxlength="6" placeholder="例如: A3F7K2" style="text-transform:uppercase;letter-spacing:4px;text-align:center;font-size:20px" />
+        <label>你的昵称</label>
+        <input id="joinDisplayName" type="text" required maxlength="20" placeholder="例如: 爸爸 / 小小" />
+        <label>你的身份</label>
+        <select id="joinRole" required>
+          <option value="parent">家长 (可以管理任务)</option>
+          <option value="kid">小朋友 (只能打卡)</option>
+        </select>
+        <label>邮箱</label>
+        <input id="joinEmail" type="email" required autocomplete="email" />
+        <label>密码 (至少 6 位)</label>
+        <input id="joinPassword" type="password" required minlength="6" autocomplete="new-password" />
+        <button type="submit">加入家庭</button>
+        <p class="switch"><a href="#" class="toLogin">已有账号? 直接登录</a></p>
       </form>
 
       <p id="msg" class="msg"></p>
@@ -51,24 +74,21 @@
       m.className = "msg " + (isError ? "err" : "ok");
     };
 
-    // 已登录直接跳首页
     Auth.getSession().then((s) => { if (s) location.href = "index.html"; });
 
-    // 切换表单
-    $("toRegister").onclick = (e) => {
-      e.preventDefault();
-      $("loginForm").style.display = "none";
-      $("registerForm").style.display = "block";
-      $("title").textContent = "注册新家庭";
+    function showForm(id, title) {
+      ["loginForm", "registerForm", "joinForm"].forEach((f) => {
+        $(f).style.display = f === id ? "block" : "none";
+      });
+      $("title").textContent = title;
       msg("", false);
-    };
-    $("toLogin").onclick = (e) => {
-      e.preventDefault();
-      $("registerForm").style.display = "none";
-      $("loginForm").style.display = "block";
-      $("title").textContent = "登录";
-      msg("", false);
-    };
+    }
+
+    $("toRegister").onclick = (e) => { e.preventDefault(); showForm("registerForm", "注册新家庭"); };
+    $("toJoin").onclick = (e) => { e.preventDefault(); showForm("joinForm", "加入已有家庭"); };
+    document.querySelectorAll(".toLogin").forEach((a) => {
+      a.onclick = (e) => { e.preventDefault(); showForm("loginForm", "登录"); };
+    });
 
     // 登录
     $("loginForm").onsubmit = async (e) => {
@@ -85,7 +105,7 @@
       }
     };
 
-    // 注册
+    // 创建新家庭
     $("registerForm").onsubmit = async (e) => {
       e.preventDefault();
       msg("创建家庭中...", false);
@@ -99,10 +119,32 @@
         if (result.session) {
           location.href = "index.html";
         } else {
-          msg("请到邮箱查收验证邮件后再登录 (如果 Supabase 已关闭邮箱验证则可以直接登录)", false);
+          msg("请到邮箱查收验证邮件后再登录", false);
         }
       } catch (err) {
         msg(err.message || "注册失败", true);
+      }
+    };
+
+    // 加入已有家庭
+    $("joinForm").onsubmit = async (e) => {
+      e.preventDefault();
+      msg("加入家庭中...", false);
+      try {
+        const result = await Auth.signUpJoin({
+          email: $("joinEmail").value.trim(),
+          password: $("joinPassword").value,
+          joinCode: $("joinCode").value.trim().toUpperCase(),
+          displayName: $("joinDisplayName").value.trim(),
+          role: $("joinRole").value,
+        });
+        if (result.session) {
+          location.href = "index.html";
+        } else {
+          msg("请到邮箱查收验证邮件后再登录", false);
+        }
+      } catch (err) {
+        msg(err.message || "加入失败, 请检查邀请码", true);
       }
     };
   </script>
