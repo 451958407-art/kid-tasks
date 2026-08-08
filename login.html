@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>登录 - 小朋友任务打卡</title>
+  <link rel="stylesheet" href="css/login.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="logo">🌟</div>
+      <h1 id="title">登录</h1>
+
+      <!-- 登录表单 -->
+      <form id="loginForm">
+        <label>邮箱</label>
+        <input id="loginEmail" type="email" required autocomplete="email" placeholder="your@email.com" />
+        <label>密码</label>
+        <input id="loginPassword" type="password" required minlength="6" autocomplete="current-password" />
+        <button type="submit">登录</button>
+        <p class="switch">还没有家庭？<a href="#" id="toRegister">注册新家庭</a></p>
+      </form>
+
+      <!-- 注册表单 -->
+      <form id="registerForm" style="display:none">
+        <label>家庭名称</label>
+        <input id="regFamilyName" type="text" required maxlength="30" placeholder="例如: 快乐一家" />
+        <label>你的昵称 (家长)</label>
+        <input id="regDisplayName" type="text" required maxlength="20" placeholder="例如: 妈妈" />
+        <label>邮箱</label>
+        <input id="regEmail" type="email" required autocomplete="email" />
+        <label>密码 (至少 6 位)</label>
+        <input id="regPassword" type="password" required minlength="6" autocomplete="new-password" />
+        <button type="submit">创建家庭</button>
+        <p class="switch">已有账号？<a href="#" id="toLogin">直接登录</a></p>
+      </form>
+
+      <p id="msg" class="msg"></p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const msg = (text, isError) => {
+      const m = $("msg");
+      m.textContent = text;
+      m.className = "msg " + (isError ? "err" : "ok");
+    };
+
+    // 已登录直接跳首页
+    Auth.getSession().then((s) => { if (s) location.href = "index.html"; });
+
+    // 切换表单
+    $("toRegister").onclick = (e) => {
+      e.preventDefault();
+      $("loginForm").style.display = "none";
+      $("registerForm").style.display = "block";
+      $("title").textContent = "注册新家庭";
+      msg("", false);
+    };
+    $("toLogin").onclick = (e) => {
+      e.preventDefault();
+      $("registerForm").style.display = "none";
+      $("loginForm").style.display = "block";
+      $("title").textContent = "登录";
+      msg("", false);
+    };
+
+    // 登录
+    $("loginForm").onsubmit = async (e) => {
+      e.preventDefault();
+      msg("登录中...", false);
+      try {
+        await Auth.signIn({
+          email: $("loginEmail").value.trim(),
+          password: $("loginPassword").value,
+        });
+        location.href = "index.html";
+      } catch (err) {
+        msg(err.message || "登录失败", true);
+      }
+    };
+
+    // 注册
+    $("registerForm").onsubmit = async (e) => {
+      e.preventDefault();
+      msg("创建家庭中...", false);
+      try {
+        const result = await Auth.signUpParent({
+          email: $("regEmail").value.trim(),
+          password: $("regPassword").value,
+          familyName: $("regFamilyName").value.trim(),
+          displayName: $("regDisplayName").value.trim(),
+        });
+        if (result.session) {
+          location.href = "index.html";
+        } else {
+          msg("请到邮箱查收验证邮件后再登录 (如果 Supabase 已关闭邮箱验证则可以直接登录)", false);
+        }
+      } catch (err) {
+        msg(err.message || "注册失败", true);
+      }
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>今天的任务</title>
+  <link rel="stylesheet" href="css/kid.css" />
+</head>
+<body>
+  <header>
+    <div class="user-info">
+      <span id="userName">加载中...</span>
+      <span id="roleTag" class="role-tag"></span>
+    </div>
+    <button id="logoutBtn" class="logout">退出</button>
+  </header>
+
+  <main>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">今日积分</div>
+        <div class="stat-value" id="todayPoints">0 ⭐</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">累计积分</div>
+        <div class="stat-value" id="totalPoints">0 ⭐</div>
+      </div>
+    </div>
+
+    <h2>📋 今天的任务</h2>
+    <div id="taskList" class="task-list">
+      <div class="loading">正在加载任务...</div>
+    </div>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/kid.js"></script>
+</body>
+</html>
