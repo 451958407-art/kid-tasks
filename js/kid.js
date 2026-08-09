@@ -609,8 +609,10 @@ function initTabs() {
       document.querySelectorAll(".mini-tab-btn").forEach((b) => b.classList.toggle("active", b === btn));
       $("calendarView").style.display = key === "calendar" ? "block" : "none";
       $("redemptionsHistory").style.display = key === "redemptions" ? "block" : "none";
+      $("manageView").style.display = key === "manage" ? "block" : "none";
       if (key === "calendar") loadCalendar();
-      else loadRedemptionsHistory();
+      else if (key === "redemptions") loadRedemptionsHistory();
+      else if (key === "manage") { renderManageTasks(); renderManageRewards(); }
     };
   });
 }
@@ -903,22 +905,16 @@ async function confirmCustomTask() {
 // ==================== 家长管理面板 ====================
 function initManagePanel() {
   if (state.profile?.role !== "parent") return;
-  $("manageePanel").style.display = "block";
+  // 让"记录"里的"⚙️ 管理"tab 显示
+  document.querySelectorAll(".parent-only").forEach((el) => {
+    el.style.display = "";
+  });
 
-  $("toggleManage").onclick = async () => {
-    const showing = $("manageBody").style.display === "block";
-    $("manageBody").style.display = showing ? "none" : "block";
-    $("toggleManage").textContent = showing ? "展开" : "收起";
-    if (!showing) {
-      await renderManageTasks();
-      await renderManageRewards();
-    }
-  };
-
-  document.querySelectorAll(".manage-tab-btn").forEach((btn) => {
+  // 内部 tab 切换 (任务/奖励)
+  document.querySelectorAll("#manageView .manage-tab-btn").forEach((btn) => {
     btn.onclick = () => {
-      document.querySelectorAll(".manage-tab-btn").forEach((b) => b.classList.remove("active"));
-      document.querySelectorAll(".manage-panel").forEach((p) => p.classList.remove("active"));
+      document.querySelectorAll("#manageView .manage-tab-btn").forEach((b) => b.classList.remove("active"));
+      document.querySelectorAll("#manageView .manage-panel").forEach((p) => p.classList.remove("active"));
       btn.classList.add("active");
       $("manage-" + btn.dataset.mtab).classList.add("active");
     };

@@ -316,7 +316,8 @@ h2 { font-size: 18px; margin: 20px 0 12px 4px; color: #444; }
 }
 
 /* ===== 家长管理面板 ===== */
-.manage-tabs {
+.manage-tabs,
+.manage-inner-tabs {
   display: flex; gap: 8px; margin-bottom: 12px;
   border-bottom: 1px solid #eee; padding-bottom: 6px;
 }

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>今天的任务</title>
-  <link rel="stylesheet" href="css/kid.css?v=10" />
+  <link rel="stylesheet" href="css/kid.css?v=11" />
 </head>
 <body>
   <header>
@@ -74,6 +74,7 @@
       <div class="history-tabs">
         <button class="mini-tab-btn active" data-htab="calendar">📅 日历</button>
         <button class="mini-tab-btn" data-htab="redemptions">🎁 兑换记录</button>
+        <button class="mini-tab-btn parent-only" data-htab="manage" style="display:none">⚙️ 管理</button>
       </div>
 
       <div id="calendarView" class="history-list">
@@ -101,6 +102,21 @@
 
       <div id="redemptionsHistory" class="history-list" style="display:none">
         <div class="loading">加载中...</div>
+      </div>
+
+      <div id="manageView" class="history-list" style="display:none">
+        <div class="manage-inner-tabs">
+          <button class="manage-tab-btn active" data-mtab="tasks">📋 任务</button>
+          <button class="manage-tab-btn" data-mtab="rewards">🎁 奖励</button>
+        </div>
+        <div id="manage-tasks" class="manage-panel active">
+          <div id="manageTaskList" class="manage-list"></div>
+          <button id="addTaskBtn" class="mini-btn" style="margin-top:8px;width:100%">➕ 新增任务</button>
+        </div>
+        <div id="manage-rewards" class="manage-panel">
+          <div id="manageRewardList" class="manage-list"></div>
+          <button id="addRewardBtn" class="mini-btn" style="margin-top:8px;width:100%">➕ 新增奖励</button>
+        </div>
       </div>
     </section>
 
@@ -133,30 +149,6 @@
         <input id="myNewPassword" type="password" minlength="6" placeholder="新密码 (至少 6 位)" style="width:100%;padding:8px 10px;border:1px solid #eee;border-radius:8px;margin-top:6px;font-size:14px" />
         <button id="myPwdBtn" class="mini-btn" style="margin-top:8px">保存新密码</button>
         <p class="hint">下次登录用新密码。用户名/邮箱不变。</p>
-      </div>
-    </div>
-
-    <!-- 家长管理面板: 任务和奖励 CRUD -->
-    <div id="manageePanel" class="family-panel" style="display:none">
-      <div class="family-header">
-        <span class="family-title">⚙️ 管理任务和奖励</span>
-        <button id="toggleManage" class="link-btn">展开</button>
-      </div>
-      <div id="manageBody" class="family-body" style="display:none">
-        <div class="manage-tabs">
-          <button class="manage-tab-btn active" data-mtab="tasks">📋 任务</button>
-          <button class="manage-tab-btn" data-mtab="rewards">🎁 奖励</button>
-        </div>
-
-        <div id="manage-tasks" class="manage-panel active">
-          <div id="manageTaskList" class="manage-list"></div>
-          <button id="addTaskBtn" class="mini-btn" style="margin-top:8px;width:100%">➕ 新增任务</button>
-        </div>
-
-        <div id="manage-rewards" class="manage-panel">
-          <div id="manageRewardList" class="manage-list"></div>
-          <button id="addRewardBtn" class="mini-btn" style="margin-top:8px;width:100%">➕ 新增奖励</button>
-        </div>
       </div>
     </div>
   </main>
@@ -278,7 +270,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
-  <script src="js/auth.js?v=9"></script>
-  <script src="js/kid.js?v=9"></script>
+  <script src="js/auth.js?v=11"></script>
+  <script src="js/kid.js?v=11"></script>
 </body>
 </html>
