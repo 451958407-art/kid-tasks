@@ -88,11 +88,21 @@ async function loadTasks() {
     doneCount[c.task_id] = (doneCount[c.task_id] || 0) + 1;
     (doneIds[c.task_id] = doneIds[c.task_id] || []).push(c.id);
   }
-  state.tasks = (tasksResp.data || []).map((t) => ({
-    ...t,
-    done_today: doneCount[t.id] || 0,
-    checkin_ids: doneIds[t.id] || [],
-  }));
+  // 一次性任务: 只在有打卡记录的当天显示 (避免历史任务堆积)
+  const viewCheckinTaskIds = new Set(state.todayCheckins.map((c) => c.task_id));
+  const isToday = state.viewDate === state.todayStr;
+  state.tasks = (tasksResp.data || [])
+    .filter((t) => {
+      if (!t.one_time) return true;
+      // 一次性任务: 今天永远显示 (让家长可以补打); 过去只有当天打过卡的才显示
+      if (isToday) return true;
+      return viewCheckinTaskIds.has(t.id);
+    })
+    .map((t) => ({
+      ...t,
+      done_today: doneCount[t.id] || 0,
+      checkin_ids: doneIds[t.id] || [],
+    }));
   renderDateNav();
   renderTasks();
 }
@@ -240,6 +250,24 @@ function renderTasks() {
   list.querySelectorAll(".undo-link").forEach((b) => {
     b.onclick = (e) => { e.stopPropagation(); onUndoCheckin(parseInt(b.dataset.id, 10)); };
   });
+
+  // 家长在今日视图追加"+ 自定义任务"入口
+  const isParent = state.profile?.role === "parent";
+  const isTodayView = state.viewDate === state.todayStr;
+  if (isParent && isTodayView) {
+    const addCard = document.createElement("div");
+    addCard.className = "task-card add-custom-card";
+    addCard.innerHTML = `
+      <div class="task-emoji">➕</div>
+      <div class="task-info">
+        <div class="task-name">添加临时任务</div>
+        <div class="task-meta"><span class="progress" style="color:#94a3b8">如: 做家务、帮妈妈拿快递</span></div>
+      </div>
+      <button class="btn-checkin" id="addCustomBtn">添加</button>
+    `;
+    list.appendChild(addCard);
+    $("addCustomBtn").onclick = openCustomTaskModal;
+  }
 }
 
 async function onCheckin(taskId) {
@@ -813,6 +841,278 @@ function initRedeemModal() {
   });
 }
 
+// ==================== 自定义任务弹窗 ====================
+const CUSTOM_EMOJIS = ["⭐", "🎯", "🧹", "📦", "🎨", "🎵", "🏃", "🍚", "🧺", "🛒"];
+let customEmojiIdx = 0;
+function openCustomTaskModal() {
+  customEmojiIdx = 0;
+  $("ctEmoji").textContent = CUSTOM_EMOJIS[0];
+  $("ctName").value = "";
+  $("ctPoints").value = "1";
+  const picks = $("ctQuickPoints");
+  picks.innerHTML = [1, 2, 3, 5].map((v) => `<button type="button" data-v="${v}">${v} ⭐</button>`).join("");
+  picks.querySelectorAll("button").forEach((b) => {
+    b.onclick = () => { $("ctPoints").value = b.dataset.v; };
+  });
+  $("customTaskModal").style.display = "flex";
+  setTimeout(() => $("ctName").focus(), 50);
+}
+function closeCustomTaskModal() { $("customTaskModal").style.display = "none"; }
+function initCustomTaskModal() {
+  $("ctCancel").onclick = closeCustomTaskModal;
+  $("customTaskModal").addEventListener("click", (e) => {
+    if (e.target.id === "customTaskModal") closeCustomTaskModal();
+  });
+  $("ctEmoji").onclick = () => {
+    customEmojiIdx = (customEmojiIdx + 1) % CUSTOM_EMOJIS.length;
+    $("ctEmoji").textContent = CUSTOM_EMOJIS[customEmojiIdx];
+  };
+  $("ctConfirm").onclick = confirmCustomTask;
+}
+async function confirmCustomTask() {
+  const name = $("ctName").value.trim();
+  const points = parseInt($("ctPoints").value, 10);
+  if (!name) { toast("请输入任务名称", true); return; }
+  if (!Number.isFinite(points) || points < 1) { toast("积分必须是正整数", true); return; }
+  const emoji = $("ctEmoji").textContent;
+  const btn = $("ctConfirm");
+  btn.disabled = true;
+  // 1. 创建 one_time 任务
+  const { data: task, error: taskErr } = await sb.from("tasks").insert({
+    family_id: state.profile.family_id,
+    name, emoji, points,
+    daily_limit: 1,
+    active: true,
+    one_time: true,
+  }).select().single();
+  if (taskErr) { toast(taskErr.message, true); btn.disabled = false; return; }
+  // 2. 立即打卡到当前 viewDate
+  const { error: chkErr } = await sb.from("check_ins").insert({
+    family_id: state.profile.family_id,
+    task_id: task.id,
+    day: state.viewDate,
+  });
+  btn.disabled = false;
+  if (chkErr) { toast("任务已创建但打卡失败: " + chkErr.message, true); }
+  else { toast(`已添加 ${emoji}${name}, +${points} ⭐`, false); }
+  closeCustomTaskModal();
+  await loadTasks();
+  await refreshStats();
+}
+
+// ==================== 家长管理面板 ====================
+function initManagePanel() {
+  if (state.profile?.role !== "parent") return;
+  $("manageePanel").style.display = "block";
+
+  $("toggleManage").onclick = async () => {
+    const showing = $("manageBody").style.display === "block";
+    $("manageBody").style.display = showing ? "none" : "block";
+    $("toggleManage").textContent = showing ? "展开" : "收起";
+    if (!showing) {
+      await renderManageTasks();
+      await renderManageRewards();
+    }
+  };
+
+  document.querySelectorAll(".manage-tab-btn").forEach((btn) => {
+    btn.onclick = () => {
+      document.querySelectorAll(".manage-tab-btn").forEach((b) => b.classList.remove("active"));
+      document.querySelectorAll(".manage-panel").forEach((p) => p.classList.remove("active"));
+      btn.classList.add("active");
+      $("manage-" + btn.dataset.mtab).classList.add("active");
+    };
+  });
+
+  $("addTaskBtn").onclick = () => openTaskEditModal(null);
+  $("addRewardBtn").onclick = () => openRewardEditModal(null);
+}
+
+async function renderManageTasks() {
+  const box = $("manageTaskList");
+  // 拉取所有非一次性任务 (one_time=false 或字段不存在)
+  const { data, error } = await sb.from("tasks")
+    .select("*").eq("active", true).order("sort_order").order("id");
+  if (error) { box.innerHTML = `<div class="empty">${error.message}</div>`; return; }
+  const list = (data || []).filter((t) => !t.one_time);
+  if (!list.length) { box.innerHTML = '<div class="empty">还没有任务</div>'; return; }
+  box.innerHTML = list.map((t) => `
+    <div class="manage-item">
+      <span class="manage-emoji">${t.emoji}</span>
+      <div class="manage-main">
+        <div class="manage-name">${escapeHtml(t.name)}</div>
+        <div class="manage-sub">+${t.points}⭐ × ${t.daily_limit}次/天</div>
+      </div>
+      <button class="mini-btn edit-task" data-id="${t.id}">编辑</button>
+      <button class="mini-btn danger del-task" data-id="${t.id}">删除</button>
+    </div>
+  `).join("");
+  box.querySelectorAll(".edit-task").forEach((b) => {
+    b.onclick = () => {
+      const t = list.find((x) => x.id === parseInt(b.dataset.id, 10));
+      openTaskEditModal(t);
+    };
+  });
+  box.querySelectorAll(".del-task").forEach((b) => {
+    b.onclick = () => onDeleteTask(parseInt(b.dataset.id, 10), list.find((x) => x.id === parseInt(b.dataset.id, 10))?.name);
+  });
+}
+
+async function renderManageRewards() {
+  const box = $("manageRewardList");
+  const { data, error } = await sb.from("rewards")
+    .select("*").eq("active", true).order("sort_order").order("id");
+  if (error) { box.innerHTML = `<div class="empty">${error.message}</div>`; return; }
+  const list = data || [];
+  if (!list.length) { box.innerHTML = '<div class="empty">还没有奖励</div>'; return; }
+  box.innerHTML = list.map((r) => `
+    <div class="manage-item">
+      <span class="manage-emoji">${r.emoji}</span>
+      <div class="manage-main">
+        <div class="manage-name">${escapeHtml(r.name)}</div>
+        <div class="manage-sub">${r.cost}⭐${r.variable ? ` / ${escapeHtml(r.unit || "次")}` : ""}${r.variable ? ' (可选数量)' : ''}</div>
+      </div>
+      <button class="mini-btn edit-reward" data-id="${r.id}">编辑</button>
+      <button class="mini-btn danger del-reward" data-id="${r.id}">删除</button>
+    </div>
+  `).join("");
+  box.querySelectorAll(".edit-reward").forEach((b) => {
+    b.onclick = () => {
+      const r = list.find((x) => x.id === parseInt(b.dataset.id, 10));
+      openRewardEditModal(r);
+    };
+  });
+  box.querySelectorAll(".del-reward").forEach((b) => {
+    b.onclick = () => onDeleteReward(parseInt(b.dataset.id, 10), list.find((x) => x.id === parseInt(b.dataset.id, 10))?.name);
+  });
+}
+
+async function onDeleteTask(id, name) {
+  if (!confirm(`确定删除任务"${name || ""}"吗?\n\n注意: 已有的打卡记录不会消失, 但任务不再显示在今日列表.`)) return;
+  // 软删除: 置 active=false, 保留历史记录
+  const { error } = await sb.from("tasks").update({ active: false }).eq("id", id);
+  if (error) { toast(error.message, true); return; }
+  toast("已删除", false);
+  await renderManageTasks();
+  await loadTasks();
+  await refreshStats();
+}
+
+async function onDeleteReward(id, name) {
+  if (!confirm(`确定删除奖励"${name || ""}"吗?\n\n注意: 已有的兑换记录不会消失.`)) return;
+  const { error } = await sb.from("rewards").update({ active: false }).eq("id", id);
+  if (error) { toast(error.message, true); return; }
+  toast("已删除", false);
+  await renderManageRewards();
+  await loadRewardsData();
+  await renderRewards();
+}
+
+// ==================== 任务编辑弹窗 ====================
+let taskEditContext = null;
+function openTaskEditModal(task) {
+  taskEditContext = task;
+  $("teTitle").textContent = task ? "编辑任务" : "新增任务";
+  $("teEmoji").textContent = task?.emoji || "⭐";
+  $("teEmojiInput").value = task?.emoji || "⭐";
+  $("teName").value = task?.name || "";
+  $("tePoints").value = task?.points ?? 1;
+  $("teLimit").value = task?.daily_limit ?? 1;
+  $("taskEditModal").style.display = "flex";
+}
+function closeTaskEditModal() { $("taskEditModal").style.display = "none"; }
+function initTaskEditModal() {
+  $("teCancel").onclick = closeTaskEditModal;
+  $("taskEditModal").addEventListener("click", (e) => {
+    if (e.target.id === "taskEditModal") closeTaskEditModal();
+  });
+  $("teEmojiInput").addEventListener("input", () => {
+    $("teEmoji").textContent = $("teEmojiInput").value || "⭐";
+  });
+  $("teConfirm").onclick = confirmTaskEdit;
+}
+async function confirmTaskEdit() {
+  const name = $("teName").value.trim();
+  const emoji = $("teEmojiInput").value.trim() || "⭐";
+  const points = parseInt($("tePoints").value, 10);
+  const daily_limit = parseInt($("teLimit").value, 10);
+  if (!name) { toast("请输入任务名称", true); return; }
+  if (!Number.isFinite(points) || points < 1) { toast("积分必须 ≥ 1", true); return; }
+  if (!Number.isFinite(daily_limit) || daily_limit < 1) { toast("每日次数必须 ≥ 1", true); return; }
+  const payload = { name, emoji, points, daily_limit };
+  const btn = $("teConfirm");
+  btn.disabled = true;
+  let err;
+  if (taskEditContext) {
+    ({ error: err } = await sb.from("tasks").update(payload).eq("id", taskEditContext.id));
+  } else {
+    ({ error: err } = await sb.from("tasks").insert({
+      ...payload, active: true, one_time: false,
+      family_id: state.profile.family_id,
+    }));
+  }
+  btn.disabled = false;
+  if (err) { toast(err.message, true); return; }
+  toast(taskEditContext ? "已保存" : "已添加", false);
+  closeTaskEditModal();
+  await renderManageTasks();
+  await loadTasks();
+  await refreshStats();
+}
+
+// ==================== 奖励编辑弹窗 ====================
+let rewardEditContext = null;
+function openRewardEditModal(reward) {
+  rewardEditContext = reward;
+  $("reTitle").textContent = reward ? "编辑奖励" : "新增奖励";
+  $("reEmoji").textContent = reward?.emoji || "🎁";
+  $("reEmojiInput").value = reward?.emoji || "🎁";
+  $("reName").value = reward?.name || "";
+  $("reCost").value = reward?.cost ?? 10;
+  $("reVariable").checked = !!reward?.variable;
+  $("reUnit").value = reward?.unit || "次";
+  $("rewardEditModal").style.display = "flex";
+}
+function closeRewardEditModal() { $("rewardEditModal").style.display = "none"; }
+function initRewardEditModal() {
+  $("reCancel").onclick = closeRewardEditModal;
+  $("rewardEditModal").addEventListener("click", (e) => {
+    if (e.target.id === "rewardEditModal") closeRewardEditModal();
+  });
+  $("reEmojiInput").addEventListener("input", () => {
+    $("reEmoji").textContent = $("reEmojiInput").value || "🎁";
+  });
+  $("reConfirm").onclick = confirmRewardEdit;
+}
+async function confirmRewardEdit() {
+  const name = $("reName").value.trim();
+  const emoji = $("reEmojiInput").value.trim() || "🎁";
+  const cost = parseInt($("reCost").value, 10);
+  const variable = $("reVariable").checked;
+  const unit = $("reUnit").value.trim() || "次";
+  if (!name) { toast("请输入奖励名称", true); return; }
+  if (!Number.isFinite(cost) || cost < 1) { toast("价格必须 ≥ 1", true); return; }
+  const payload = { name, emoji, cost, variable, unit };
+  const btn = $("reConfirm");
+  btn.disabled = true;
+  let err;
+  if (rewardEditContext) {
+    ({ error: err } = await sb.from("rewards").update(payload).eq("id", rewardEditContext.id));
+  } else {
+    ({ error: err } = await sb.from("rewards").insert({
+      ...payload, active: true,
+      family_id: state.profile.family_id,
+    }));
+  }
+  btn.disabled = false;
+  if (err) { toast(err.message, true); return; }
+  toast(rewardEditContext ? "已保存" : "已添加", false);
+  closeRewardEditModal();
+  await renderManageRewards();
+  await loadRewardsData();
+  await renderRewards();
+}
+
 // ==================== 入口 ====================
 async function main() {
   const auth = await Auth.requireAuth();
@@ -826,6 +1126,10 @@ async function main() {
   initTabs();
   initAccountPanel();
   initRedeemModal();
+  initCustomTaskModal();
+  initTaskEditModal();
+  initRewardEditModal();
+  initManagePanel();
   initCalendarNav();
   initDateNav();
   await loadAll();

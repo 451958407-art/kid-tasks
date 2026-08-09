@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>今天的任务</title>
-  <link rel="stylesheet" href="css/kid.css?v=7" />
+  <link rel="stylesheet" href="css/kid.css?v=10" />
 </head>
 <body>
   <header>
@@ -135,6 +135,30 @@
         <p class="hint">下次登录用新密码。用户名/邮箱不变。</p>
       </div>
     </div>
+
+    <!-- 家长管理面板: 任务和奖励 CRUD -->
+    <div id="manageePanel" class="family-panel" style="display:none">
+      <div class="family-header">
+        <span class="family-title">⚙️ 管理任务和奖励</span>
+        <button id="toggleManage" class="link-btn">展开</button>
+      </div>
+      <div id="manageBody" class="family-body" style="display:none">
+        <div class="manage-tabs">
+          <button class="manage-tab-btn active" data-mtab="tasks">📋 任务</button>
+          <button class="manage-tab-btn" data-mtab="rewards">🎁 奖励</button>
+        </div>
+
+        <div id="manage-tasks" class="manage-panel active">
+          <div id="manageTaskList" class="manage-list"></div>
+          <button id="addTaskBtn" class="mini-btn" style="margin-top:8px;width:100%">➕ 新增任务</button>
+        </div>
+
+        <div id="manage-rewards" class="manage-panel">
+          <div id="manageRewardList" class="manage-list"></div>
+          <button id="addRewardBtn" class="mini-btn" style="margin-top:8px;width:100%">➕ 新增奖励</button>
+        </div>
+      </div>
+    </div>
   </main>
 
   <div id="toast" class="toast"></div>
@@ -164,9 +188,97 @@
     </div>
   </div>
 
+  <!-- 自定义任务弹窗 -->
+  <div id="customTaskModal" class="modal" style="display:none">
+    <div class="modal-card">
+      <div class="modal-emoji" id="ctEmoji" style="cursor:pointer" title="点击换 emoji">⭐</div>
+      <h3>添加临时任务</h3>
+      <p class="modal-desc">只在今天显示, 打卡后积分会正常计入</p>
+
+      <label class="mini-label" style="margin-top:8px;display:block">任务名称</label>
+      <input id="ctName" type="text" maxlength="20" placeholder="如: 帮妈妈拿快递" style="width:100%;padding:10px;border:1px solid #eee;border-radius:10px;margin-top:6px;font-size:15px;box-sizing:border-box" />
+
+      <label class="mini-label" style="margin-top:12px;display:block">积分奖励</label>
+      <div class="amount-input-row">
+        <input id="ctPoints" type="number" min="1" max="20" step="1" value="1" />
+        <span class="amount-unit">⭐</span>
+      </div>
+      <div class="quick-picks" id="ctQuickPoints"></div>
+
+      <div class="modal-actions" style="margin-top:12px">
+        <button id="ctCancel" class="btn-secondary">取消</button>
+        <button id="ctConfirm" class="btn-primary">创建并打卡</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 任务编辑弹窗 -->
+  <div id="taskEditModal" class="modal" style="display:none">
+    <div class="modal-card">
+      <div class="modal-emoji" id="teEmoji" style="cursor:pointer" title="点击换 emoji">⭐</div>
+      <h3 id="teTitle">编辑任务</h3>
+
+      <label class="mini-label" style="margin-top:8px;display:block">任务名称</label>
+      <input id="teName" type="text" maxlength="20" class="me-input" />
+
+      <label class="mini-label" style="margin-top:10px;display:block">Emoji (可手动填入)</label>
+      <input id="teEmojiInput" type="text" maxlength="4" class="me-input" placeholder="⭐" />
+
+      <label class="mini-label" style="margin-top:10px;display:block">每次打卡积分</label>
+      <div class="amount-input-row">
+        <input id="tePoints" type="number" min="1" max="20" step="1" value="1" />
+        <span class="amount-unit">⭐</span>
+      </div>
+
+      <label class="mini-label" style="margin-top:10px;display:block">每天最多打卡</label>
+      <div class="amount-input-row">
+        <input id="teLimit" type="number" min="1" max="10" step="1" value="1" />
+        <span class="amount-unit">次</span>
+      </div>
+
+      <div class="modal-actions" style="margin-top:12px">
+        <button id="teCancel" class="btn-secondary">取消</button>
+        <button id="teConfirm" class="btn-primary">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 奖励编辑弹窗 -->
+  <div id="rewardEditModal" class="modal" style="display:none">
+    <div class="modal-card">
+      <div class="modal-emoji" id="reEmoji">🎁</div>
+      <h3 id="reTitle">编辑奖励</h3>
+
+      <label class="mini-label" style="margin-top:8px;display:block">奖励名称</label>
+      <input id="reName" type="text" maxlength="20" class="me-input" />
+
+      <label class="mini-label" style="margin-top:10px;display:block">Emoji</label>
+      <input id="reEmojiInput" type="text" maxlength="4" class="me-input" placeholder="🎁" />
+
+      <label class="mini-label" style="margin-top:10px;display:block">兑换价格 (积分)</label>
+      <div class="amount-input-row">
+        <input id="reCost" type="number" min="1" step="1" value="10" />
+        <span class="amount-unit">⭐ / 次</span>
+      </div>
+
+      <label class="mini-label" style="margin-top:10px;display:flex;align-items:center;gap:8px">
+        <input id="reVariable" type="checkbox" />
+        <span>可选数量 (家长兑换时手动填数量, 积分 = 单价 × 数量)</span>
+      </label>
+
+      <label class="mini-label" style="margin-top:10px;display:block">单位</label>
+      <input id="reUnit" type="text" maxlength="6" class="me-input" placeholder="次" />
+
+      <div class="modal-actions" style="margin-top:12px">
+        <button id="reCancel" class="btn-secondary">取消</button>
+        <button id="reConfirm" class="btn-primary">保存</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/kid.js?v=7"></script>
+  <script src="js/auth.js?v=9"></script>
+  <script src="js/kid.js?v=9"></script>
 </body>
 </html>
